@@ -167,6 +167,14 @@ p.description{
     transition: all ease .5s;
     opacity: 0;
 }
+.landscape-list li .hover-cover:after{
+    content: '+';
+    display: block;
+    font-size: 40px;
+    font-weight: 700;
+    padding-top: 80px;
+    color: #fff;
+}
 .landscape-list li .hover-cover:hover{
     opacity: 1;
 }
