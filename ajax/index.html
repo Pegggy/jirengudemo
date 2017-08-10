@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <style>
+        ul,li{
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .news-list li{
+            border: 1px solid #FF3366;
+            border-radius: 3px;
+            color: #333;
+            font-size: 14px;
+            padding-top: 10px;
+            padding-bottom: 10px;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        .news-list li:hover{
+            background: #FFCCCC;
+        }
+        .btn{
+            display: inline-block;
+            text-decoration: none;
+            border:1px solid #FF3366;
+            border-radius: 3px;
+            padding: 10px 15px;
+            color:  #CC0033;
+            font-weight: bold;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+  </style>
+</head>
+<body>
+  <ul class="news-list">
+
+  </ul>
+  <a href="#" id="loadMore" class="btn">加载更多</a>
+
+  <script>
+    var btn = document.querySelector('#loadMore');
+    var list = document.querySelector('.news-list');
+    var load = false;
+    var index = 0, length = 5;
+    btn.addEventListener('click',function(e){
+      e.preventDefault();
+      if(load){
+        return;
+      }
+        load = true;
+        loadData(renderPage);
+    })
+
+
+    function loadData(callback) {
+      ajax({
+        type: 'get',
+        url: '/loadMore',
+        data:{
+          index: index,
+          length: length
+        },
+        onSuccess: callback,
+        onError: function(){
+          console.log('出错了');
+        }
+      });
+      load = false;
+      index += 5;
+    }
+
+    function renderPage(data){
+      var node = document.createDocumentFragment();
+      for(var i = 0 ;i < data.length; i++){
+        var li = document.createElement('li');
+        li.textContent = data[i];
+        node.appendChild(li);
+      }
+      list.appendChild(node);
+    }
+
+    function ajax(options){
+      var xhr = new XMLHttpRequest();
+      var arr = [];
+      for(key in options.data){
+        arr.push(key + '=' + options.data[key]);
+      }
+      var query = '?';
+      query += arr.join('&');
+      console.log(options.url+query);
+      xhr.open(options.type,options.url+query,true);
+      xhr.send();
+      xhr.onload = function(){
+        if((xhr.status >= 200 && xhr.status < 300) || xhr.status === 304 ){
+          var results = JSON.parse(xhr.responseText);
+          options.onSuccess(results);
+        }else{
+          options.onError();
+        }
+      }
+    }
+  </script>
+</body>
+</html>
