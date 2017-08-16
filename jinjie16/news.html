@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>新闻加载</title>
+  <script src="http://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+  <style>
+    ul,li{
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    h2,p{
+      margin: 0;
+    }
+    a{
+      text-decoration: none;
+      color: #999;
+    }
+    .clearfix::after{
+      content: '';
+      display: block;
+      clear: both;
+    }
+    .wrap{
+      width: 600px;
+      margin: 0 auto;
+    }
+    .news{
+      font-size: 14px;
+      margin-top: 10px;
+    }
+    .thumb{
+      float: left;
+    }
+    .thumb img{
+      width: 50px;
+      height: 50px;
+    }
+    .news h2{
+      font-size: 14px;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 10px;
+      margin-left: 60px;
+    }
+    .news p{
+      margin-left: 60px;
+    }
+    .load-more{
+      width: 3px;
+      height: 3px;
+      visibility: hidden;
+    }
+  </style>
+</head>
+<body>
+  <ul class="wrap">
+
+  </ul>
+  <p class="load-more"></p>
+  <script>
+    var page = 0;
+    var isArrive = true;
+    var isOver = false;
+    var $loadMore = $('.load-more');
+    var clock;
+    //先加载新闻，避免打开页面时空白
+    renderNews();
+    //给window绑定滚动事件
+    $(window).on('scroll',function(){
+      if(clock){
+        clearTimeout(clock);
+      }
+      clock = setTimeout(function(){
+        renderNews();
+      },300)
+    })
+    //当loadmore出现在视窗中，新闻加载完毕，并且没有滚动到页面底部时，加载新闻
+    function renderNews(){
+      if(checkShow($loadMore) && isArrive && !isOver){
+        loadNews();
+      }     
+    }
+    //确认loadmore是否出现在视窗中
+    function checkShow(){
+      var windowHeight = $(window).height();
+      var scrollTop = $(window).scrollTop();
+      var offsetTop = $loadMore.offset().top;
+      if(offsetTop < windowHeight + scrollTop && offsetTop > screenTop){
+        //console.log(1);
+        return true;
+      }
+      return false;
+    }
+    //向后台请求数据
+    function loadNews(){
+      isArrive = false;
+      $.get('/getNews',{page: page})
+      .done(function(result){
+        isArrive = true;
+        if(result.status === 0 ){
+          appendNews(result.data);
+          page += 1;
+          renderNews();
+        }else{
+          console.log(result.status);
+        }
+      }).fail(function(jqXHR, textStatus){
+          consloe.log(textStatus);
+      });
+    }
+    //向页面添加新闻
+    function appendNews(news){
+      //当返回的数据中news的长度变为0，表示后台数据已经全部加载完毕
+      if(news.length === 0){
+        isOver = true;
+        $('.wrap').after('<p>没有更多新闻了</p>');
+        return;
+      }
+      var html = '';
+      $.each(news,function(){
+        html += '<li class="news">';
+        html += '<a href="' + this.link + '" class="clearfix">';
+        html += '<div class="thumb">';
+        html += '<img src="'+ this.img +'">';
+        html += '</div>';
+        html += '<h2>'+ this.title +'</h2>';
+        html += '<p>'+ this.brif +'</p>';
+        html += '</a></li>';
+      })
+      $('.wrap').append(html);
+    }
+  </script>
+</body>
+</html>
