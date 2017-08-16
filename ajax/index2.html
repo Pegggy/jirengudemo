@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>News</title>
+    <style>
+        ul,li{
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .news-list li{
+            border: 1px solid #FF3366;
+            border-radius: 3px;
+            color: #333;
+            font-size: 14px;
+            padding-top: 10px;
+            padding-bottom: 10px;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        .news-list li:hover{
+            background: #FFCCCC;
+        }
+        .btn{
+            display: inline-block;
+            text-decoration: none;
+            border:1px solid #FF3366;
+            border-radius: 3px;
+            padding: 10px 15px;
+            color:  #CC0033;
+            font-weight: bold;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+    </style>
+    <script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+</head>
+<body>
+    <ul class="news-list">     
+    </ul>
+    <a href="#" id="loadmore" class="btn">加载更多</a>
+  <script>
+    var $btn = $('#loadmore')
+    var $list = $('.news-list');
+    var dataArr = true;
+    var index = 0;
+
+    $btn.on('click', function(e){
+        e.preventDefault();
+        if(!dataArr){
+            return;
+        }
+        $.ajax({
+            url: '/loadMore',
+            method: 'GET',
+            data: {
+                length: 5,
+                index: index,
+            }
+        }).done(function(result){
+            appendData(result);
+        }).fail(function(jqXHR, textStatus){
+            consloe.log(textStatus);
+        });
+            dataArr = true;
+            index += 5;
+    })
+    // function ajax(options){
+    //     var xhr = new XMLHttpRequest();
+    //     var query = '?';
+    //     var arr = [];
+    //     for(key in options.data){
+    //         arr.push(key + '=' + options.data[key]);
+    //     }
+    //     query += arr.join('&');
+    //     xhr.open(options.type,options.url + query,true);
+    //     xhr.send();
+    //     xhr.onload = function(){
+    //         if(xhr.status === 200 || xhr.status === 304){
+    //             var data = JSON.parse(xhr.responseText);
+    //             options.onsuccess(data);
+    //         }else{
+    //             options.onError();
+    //         }
+    //     }
+    // }
+    function appendData(data){
+        var fragment = document.createDocumentFragment();
+        for(var i = 0; i < data.length; i++){
+            var li = document.createElement('li');
+            li.innerText = data[i];
+            fragment.appendChild(li);
+        }
+        $list.append(fragment);
+    }
+  </script>
+  
+</body>
+</html>
