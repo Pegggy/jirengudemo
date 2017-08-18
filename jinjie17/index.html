@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>无限轮播</title>
+    <script src="//code.jquery.com/jquery-2.1.1.min.js"></script>
+    <style>
+    ul,li{
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+    }
+    .clearfix:after{
+        content: '';
+        display: block;
+        clear: both;
+    }
+    .img-ct{
+        position: relative;
+        width: 320px;
+        height: 240px;
+        overflow: hidden;
+    }
+    .img-ct .img-list{
+        position: absolute;
+    }
+    .img-ct .img-list>li{
+        float: left;
+    }
+    .img-ct img{
+        width: 320px;
+        height: 240px;
+    }
+    .arrow{
+        width: 30px;
+        height: 30px;
+        position: absolute;
+        top: 50%;
+        margin-top: -10px;
+        border-radius: 50%;
+        z-index: 1;
+        color: #fff;
+        background: rgba(0,0,0,.25);
+        text-align: center;
+        text-decoration: none;
+        font-weight: bold;
+    }
+    .arrow:hover{
+        background: rgba(0,0,0,.4);
+    }
+    .arrow.prev{
+        left: 10px;
+    }
+    .arrow.next{
+        right: 10px;
+    }
+    .buttons{
+        position: absolute;
+        z-index: 1;
+        /* 绝对定位元素必须设置宽度，此处设为100%，表示全部由子元素撑起来 */
+        width: 100%;
+        bottom: 10px;
+        /* font-size设为0，去掉inline-block的空隙 */
+        font-size: 0;
+        text-align: center;
+    }
+    .buttons>li{
+        display: inline-block;
+        font-size: 0;
+        width: 30px;
+        height: 5px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        margin: 0 3px;
+        cursor: pointer;
+    }
+    .buttons>li.active{
+        background: #ccc;
+    }
+    </style>
+</head>
+<body>
+    <div class="img-ct">
+        <ul class="img-list clearfix">
+            <li data-id=0><a href="#"><img src="http://cdn.jirengu.com/book.jirengu.com/img/2.jpg"></a></li>
+            <li data-id=1><a href="#"><img src="http://cdn.jirengu.com/book.jirengu.com/img/3.jpg"></a></li>
+            <li data-id=2><a href="#"><img src="http://cdn.jirengu.com/book.jirengu.com/img/4.jpg"></a></li>
+            <li data-id=3><a href="#"><img src="http://cdn.jirengu.com/book.jirengu.com/img/5.jpg"></a></li>
+        </ul>
+        <a href="#" class="prev arrow">&lt;</a>
+        <a href="#" class="next arrow">&gt;</a>
+        <ul class="buttons clearfix">
+            <li class="active"></li>
+            <li></li>
+            <li></li>
+            <li></li>
+        </ul>
+    </div>
+    <script>
+        var $ct = $('.img-ct');
+        var $imgList = $('.img-list');
+        var $imgs = $('.img-list>li');
+        var $prevBtn = $('.prev');
+        var $nextBtn = $('.next');
+        var $buttons = $('.buttons>li');
+        var imgWidth = $imgs.width();
+        var imgLength = $imgs.length;
+        var imgIndex = 0;
+        var isAnimate = false;
+
+        $imgList.append($imgs.first().clone());
+        $imgList.prepend($imgs.last().clone());
+        //设置包裹imgs的父容器宽度包括新增两张图片的宽度
+        //初始位置为-320px
+        $imgList.css({
+            width:(imgLength + 2)*imgWidth,
+            left: -imgWidth});
+
+        $prevBtn.click(function(){
+            console.log(isAnimate);
+            if(isAnimate){
+                return;
+            }
+            playPrev(1);
+            //如果把showBtn()放在这里，showBtn会比playPrev函数里的回调函数先执行，此时imgIndex还没有变化，因此button图标就会落后图片一步; 
+        })
+
+        $nextBtn.click(function(){
+            if(isAnimate){
+            return;
+            }
+            playNext(1);
+        })
+
+        $buttons.click(function(){
+            var len = $(this).index()-imgIndex;
+            console.log(len);
+            if( len > 0){
+                playNext(len);
+            }else if(len < 0){
+                playPrev(-len);
+            }else{
+                return;
+            }
+        })
+        function playPrev(len){
+            isAnimate = true;
+            $imgList.animate({left:'+=' + imgWidth * len},function(){
+                imgIndex -= len;
+                if(imgIndex < 0){
+                    $imgList.css({left: -imgWidth*imgLength});
+                    imgIndex = imgLength-1;
+                }
+                showBtn();
+                isAnimate = false;
+            });
+        }
+        function playNext(len){
+            isAnimate = true;
+            $imgList.animate({left:'-=' + imgWidth * len},function(){
+                imgIndex += len;
+                if(imgIndex === imgLength){
+                    $imgList.css({left: -imgWidth});
+                    imgIndex = 0;
+                }
+                showBtn();
+                isAnimate = false;
+            });
+        }
+
+        function showBtn(){
+            $buttons.removeClass('active').eq(imgIndex).addClass('active');
+        }
+        var clock = setInterval(function(){
+            playNext(1);
+        },3000);
+        
+        $ct.on('mouseenter',function(){
+            clearInterval(clock);
+        })
+        $ct.on('mouseleave',function(){
+            clock = setInterval(function(){
+            playNext(1);
+            },3000);
+        })
+    </script>
+</body>
+</html>
