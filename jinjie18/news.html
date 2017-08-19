@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>新闻瀑布流懒加载</title>
+  <style>
+    html,body,ul,li,p,div{
+      margin: 0;
+      padding: 0;
+    }
+    ul,li{
+      list-style: none;
+    }
+    .wrap{
+      width: 900px;
+      margin: 0 auto;
+    }
+    .news-ct{
+      position: relative;
+    }
+    .news-ct .item{
+      position: absolute;
+      width: 280px;
+      margin-right: 20px;
+      margin-top: 20px;
+      border: 1px solid #ccc;
+      box-shadow: 2px 4px 8px 4px rgba(0, 0, 0, .2);
+    }
+    .news-ct .hide{
+      display: none;
+    }
+    .item .link img{
+      width: 260px;
+      margin: 10px;
+    }
+    .item h4{
+      margin: 10px;
+      border-bottom: 1px solid #ccc;
+    }
+    .item p{
+      margin: 10px;
+    }
+    .load-more{
+      width: 100px;
+      height: 20px;
+      visibility: hidden;
+    }
+</style>
+<script src="http://apps.bdimg.com/libs/jquery/1.9.1/jquery.min.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <div class="waterfall-ct">
+      <ul class="news-ct">
+        <!-- <li class="item">
+          <a href="http://slide.tech.sina.com.cn/d/slide_5_453_97250.html/d/2" class="link">
+            <img src="http://n.sinaimg.cn/tech/transform/20170818/LbXE-fykcpru7977926.jpg" alt=>
+          </a>
+          <h4>座头鲸出海面与游客“打招呼”</h4>
+          <p>一群游客乘坐观光船在悉尼港外游览，突遇一头跃出海面的座头鲸，令他们是惊喜不已。</p>
+          </li> -->
+          <li class="item hide">用于计算imgLength</li>
+      </ul>
+      <div class="load-more">hidden</div>
+    </div>
+  </div>
+  <script>
+    var $load = $('.load-more');
+    var curPage = 0;
+    var imgWidth = $('.item').outerWidth(true);
+    var imgLength = parseInt($(window).width()/imgWidth);
+    var imgArr = [];
+    var clock;
+    for(var i = 0; i < imgLength; i++){
+      imgArr.push(0);
+    }
+    
+    getNews();
+    function getNews(){
+      getData(function(newsList){
+        //对于获取到的新闻列表，把每一个新闻放到页面上
+        $.each(newsList,function(index,value){
+          var $node = getNode(value);
+          //在放置之前需要查看img是否加载完毕，
+          //当加载完毕以后才可以通过瀑布流的方式放到页面上
+          $node.find('img').load(function(){
+            $('.news-ct').append($node);
+            waterFall($node);
+          })
+        })
+      })   
+    }
+
+    $(window).scroll(function(){
+        if(clock) clearTimeout(clock);
+        clock = setTimeout(function(){
+          if(isVisable($load)){
+            console.log(2222);
+            getNews();
+          }
+        },100);
+    })
+    function getData(callback){
+      $.ajax({
+        url:'https://platform.sina.com.cn/slide/album_tech',
+        dataType:'jsonp',
+        jsonp:'jsoncallback',
+        data:{
+          app_key: '1271687855',
+          num: 10,
+          page: curPage
+        }
+      }).done(function(ret){
+        if(ret && ret.status && ret.status.code === "0"){
+          callback(ret.data);
+          curPage ++;
+          console.log('执行getdata');
+        }else{
+          console.log(ret.status);
+        }
+      }).fail(function(jqXHR){
+        console.log(jqXHR.status);
+      })
+    }
+
+    function getNode(node){
+      var html = '';
+      html += '<li class="item">'
+      html += '<a href="'+ node.cmnt_url +'" class="link">';
+      html += '<img src="'+ node.img_url +'" alt="'+ node.sub_ch +'">';
+      html += '</a><h4>'+ node.short_name + '</h4>';
+      html += '<p>'+ node.short_intro +'</p></li>';
+      return $(html);
+    }
+
+    function waterFall($node){
+      var minHeight = Math.min.apply(null,imgArr);
+      var minIndex = imgArr.indexOf(minHeight);
+      $node.css({
+        top: minHeight,
+        left: minIndex * imgWidth
+      });
+      imgArr[minIndex] += $node.outerHeight(true);
+      $('.news-ct').css({height: imgArr[minIndex]});
+    }
+
+    function isVisable($node){
+      var windowHeight = $(window).height();
+      var scrollTop = $(window).scrollTop();
+      var offsetTop = $node.offset().top;
+      if(offsetTop < windowHeight + scrollTop + 100 && offsetTop > scrollTop){
+        return true;
+      }
+      return false;
+    }
+  </script>
+</body>
+</html>
