@@ -9,6 +9,7 @@
     html,body,ul,li,p,div{
       margin: 0;
       padding: 0;
+      box-sizing: border-box;
     }
     ul,li{
       list-style: none;
@@ -70,7 +71,7 @@
     var $load = $('.load-more');
     var curPage = 0;
     var imgWidth = $('.item').outerWidth(true);
-    var imgLength = parseInt($(window).width()/imgWidth);
+    var imgLength = parseInt($('.wrap').width()/imgWidth);
     var imgArr = [];
     var clock;
     for(var i = 0; i < imgLength; i++){
