@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge,chrome=1">
+  <title>木桶布局图片加载</title>
+  <style>
+    html,body,div{
+      margin: 0;
+      padding: 0;
+    }
+    .img-wrap{
+      width: 1000px;
+      margin: 0 auto;
+    }
+    .img-row:after{
+      content: '';
+      display: block;
+      clear: both;
+    }
+    .img-ct{
+      float: left;
+    }
+  </style>
+  <script src="http://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+</head>
+<body>
+  <div class="img-wrap">
+    <!-- <div class="img-row"></div> -->
+  </div>
+  <script>
+    function Barrel($ct){
+      this.$ct = $ct;
+      this.rowList = [];
+      this.loadImg();
+    }
+    Barrel.prototype = {
+      loadImg:function(){
+        var _this = this;
+        //获取到100张图片的 url
+        var imgList = _this.getImg(100);
+        imgList.forEach(function(url){
+          //对每一张图片新建一个 img 对象
+          var img = new Image();
+          //获取到图片地址
+          img.src = url;
+          //当图片加载完成时获取图片的宽和高
+          img.onload = function(){
+            var imgInfo = {
+              target: this,
+              width: 200*(this.width/this.height),
+              height: 200,
+            };
+            _this.renderImg(imgInfo);
+          }
+        })
+      },
+      renderImg: function(imgInfo){
+        var _this = this;
+        var ctWidth = this.$ct.width();
+        var rowWidth = 0; 
+        var newHeight = 0;
+        var lastImg = imgInfo;
+        this.rowList.push(imgInfo);
+        $.each(this.rowList,function(idx,imgInfo){
+          rowWidth += imgInfo.width;
+          if(rowWidth > ctWidth){
+            //去掉最后一张图片
+            _this.rowList.pop();
+            //每行的宽度也得减去最后一张图片宽度
+            rowWidth = rowWidth -lastImg.width;
+            //计算出每行的新高度
+            newHeight = 200 * ctWidth/rowWidth;
+            //把在同一行的图片渲染出来
+            _this.layout(newHeight);
+            //最后一张图片即为下一行的第一张图片
+            _this.rowList = [lastImg];
+          }
+        })
+
+        
+      },
+      layout:function(newHeight){
+        var $imgRow = $('<div class="img-row"></div>');
+        $.each(this.rowList,function(idx,imgInfo){
+          var $imgCt = $('<div class="img-ct"></div>');
+          var $img = $(imgInfo.target);
+          $img.height(newHeight);
+          $imgCt.append($img);
+          $imgRow.append($imgCt);
+        })
+        this.$ct.append($imgRow);
+      },
+      getImg: function(num) {
+        var color, width, height, urls = [];
+        for (var i = 0; i < num; i++) {
+          color = Math.random().toString(16).substring(2, 8);
+          width = Math.floor(Math.random() * 100 + 50);
+          height = Math.floor(Math.random() * 30 + 50);
+          urls.push("http://placehold.it/" + width + "x" + height + "/" + color + "/fff");
+        }
+        return urls;
+      }
+    }
+    var barrels = new Barrel($('.img-wrap'));
+  </script>
+</body>
+</html>
